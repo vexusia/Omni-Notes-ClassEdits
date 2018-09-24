@@ -44,9 +44,9 @@ public class IntroActivity extends AppIntro2 {
 		finish();
 	}
 
-
+    //orignal version had !OmniNotes.isDebugBuild() to avoid repeating app intro during debug runs
 	public static boolean mustRun() {
-		return !OmniNotes.isDebugBuild() && !OmniNotes.getAppContext().getSharedPreferences(Constants.PREFS_NAME,
+		return OmniNotes.isDebugBuild() && !OmniNotes.getAppContext().getSharedPreferences(Constants.PREFS_NAME,
 				Context.MODE_MULTI_PROCESS).getBoolean(Constants.PREF_TOUR_COMPLETE, false);
 	}
 
