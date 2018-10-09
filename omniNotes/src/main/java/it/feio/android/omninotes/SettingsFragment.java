@@ -51,6 +51,7 @@ import it.feio.android.omninotes.utils.*;
 import org.apache.commons.lang.StringUtils;
 
 import java.io.File;
+import java.security.Key;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -178,7 +179,17 @@ public class SettingsFragment extends PreferenceFragment {
 			});
 		}
 
+		Preference googleCloudSync = findPreference("settings_sync_drive");
+		if (googleCloudSync != null) {
+			googleCloudSync.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+				@Override
+				public boolean onPreferenceClick(Preference preference) {
 
+					//Toast.makeText(getActivity(),"test",Toast.LENGTH_SHORT).show();
+					return false;
+				}
+			});
+		}
 //		Preference syncWithDrive = findPreference("settings_backup_drive");
 //		importFromSpringpad.setOnPreferenceClickListener(new OnPreferenceClickListener() {
 //			@Override
