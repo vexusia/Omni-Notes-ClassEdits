@@ -14,8 +14,12 @@ public class PasswordUtil {
         mContext = context;
     }
     public boolean HasValidationError(String password, String passwordCheck,String question, String answer, String answerCheck) {
-        return (!this.FieldOk(password) || !this.PasswordCheckOk(password,passwordCheck) || !this.FieldOk(question) ||
-                    !this.FieldOk(answer) || !this.AnswerCheckOk(answer,answerCheck));
+        if (!this.FieldOk(password)) return false;
+        if (!this.PasswordCheckOk(password,passwordCheck)) return false;
+        if (!this.FieldOk(question)) return false;
+        if (!this.FieldOk(answer)) return false;
+        if (!this.AnswerCheckOk(answer,answerCheck)) return false;
+        return true;
     }
 
     public String PasswordValidation(String password) {

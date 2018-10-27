@@ -117,6 +117,29 @@ public class PasswordActivity extends BaseActivity {
 		});
     }
 
+    public void PasswordSubmit() {
+		final String passwordText = password.getText().toString();
+		final String passwordCheckText = passwordCheck.getText().toString();
+		final String questionText = question.getText().toString();
+		final String answerText = answer.getText().toString();
+		final String answerCheckText = answerCheck.getText().toString();
+		password.setError(pwUtil.PasswordValidation(passwordText));
+		passwordCheck.setError(pwUtil.PasswordCheckValidation(passwordText, passwordCheckText));
+		question.setError(pwUtil.QuestionOkValidation(questionText));
+		answer.setError(pwUtil.AnswerOkValidation(answerText));
+		answerCheck.setError(pwUtil.AnswerCheckOkValidation(answerText, answerCheckText));
+		if (!pwUtil.HasValidationError(passwordText,passwordCheckText, questionText, answerText, answerCheckText)) {
+			if (prefs.getString(Constants.PREF_PASSWORD, null) != null) {
+				PasswordHelper.requestPassword(mActivity, passwordConfirmed -> {
+					if (passwordConfirmed) {
+						updatePassword(passwordText, questionText, answerText);
+					}
+				});
+			} else {
+				updatePassword(passwordText, questionText, answerText);
+			}
+		}
+	}
 	public void onEvent(PasswordRemovedEvent passwordRemovedEvent) {
 			passwordCheck.setText("");
 			password.setText("");
