@@ -31,4 +31,9 @@
         android:title="@string/settings_import_from_springpad"
         android:summary="@string/settings_import_from_springpad_summary" />
 
+    <Preference
+        android:key="settings_sync_drive"
+        android:title="@string/settings_sync_drive"
+        android:summary="@string/settings_sync_drive_summary"/>
+
 </PreferenceScreen>
