@@ -17,7 +17,11 @@
 
 package it.feio.android.omninotes.helpers;
 
+import android.app.Activity;
+import android.support.annotation.NonNull;
+
 import it.feio.android.checklistview.models.ChecklistManager;
+import it.feio.android.omninotes.models.adapters.NoteAdapter;
 import it.feio.android.omninotes.utils.Constants;
 import junit.framework.Assert;
 import org.apache.commons.lang.StringUtils;
@@ -27,7 +31,10 @@ import it.feio.android.omninotes.models.Note;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
+import java.util.ListIterator;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertNotNull;
