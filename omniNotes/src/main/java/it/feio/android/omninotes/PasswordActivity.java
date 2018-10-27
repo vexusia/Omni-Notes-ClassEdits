@@ -30,6 +30,7 @@ import it.feio.android.omninotes.db.DbHelper;
 import it.feio.android.omninotes.models.ONStyle;
 import it.feio.android.omninotes.utils.Constants;
 import it.feio.android.omninotes.utils.PasswordHelper;
+import it.feio.android.omninotes.utils.PasswordUtil;
 import it.feio.android.omninotes.utils.Security;
 import rx.Observable;
 import rx.android.schedulers.AndroidSchedulers;
@@ -45,11 +46,13 @@ public class PasswordActivity extends BaseActivity {
     private EditText answer;
     private EditText answerCheck;
     private PasswordActivity mActivity;
+    private PasswordUtil pwUtil;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        pwUtil =new PasswordUtil(this.getBaseContext());
         DisplayMetrics metrics = getResources().getDisplayMetrics();
         int screenWidth = (int) (metrics.widthPixels * 0.80);
         int screenHeight = (int) (metrics.heightPixels * 0.80);
@@ -82,10 +85,17 @@ public class PasswordActivity extends BaseActivity {
 		});
 
         findViewById(R.id.password_confirm).setOnClickListener(v -> {
-			if (checkData()) {
-				final String passwordText = password.getText().toString();
-				final String questionText = question.getText().toString();
-				final String answerText = answer.getText().toString();
+			final String passwordText = password.getText().toString();
+			final String passwordCheckText = passwordCheck.getText().toString();
+			final String questionText = question.getText().toString();
+			final String answerText = answer.getText().toString();
+			final String answerCheckText = answerCheck.getText().toString();
+            password.setError(pwUtil.PasswordValidation(passwordText));
+            passwordCheck.setError(pwUtil.PasswordCheckValidation(passwordText, passwordCheckText));
+            question.setError(pwUtil.QuestionOkValidation(questionText));
+            answer.setError(pwUtil.AnswerOkValidation(answerText));
+            answerCheck.setError(pwUtil.AnswerCheckOkValidation(answerText, answerCheckText));
+			if (!pwUtil.HasValidationError(passwordText,passwordCheckText, questionText, answerText, answerCheckText)) {
 				if (prefs.getString(Constants.PREF_PASSWORD, null) != null) {
 					PasswordHelper.requestPassword(mActivity, passwordConfirmed -> {
 						if (passwordConfirmed) {
@@ -106,8 +116,6 @@ public class PasswordActivity extends BaseActivity {
 			PasswordHelper.resetPassword(this);
 		});
     }
-
-
 
 	public void onEvent(PasswordRemovedEvent passwordRemovedEvent) {
 			passwordCheck.setText("");
@@ -183,50 +191,6 @@ public class PasswordActivity extends BaseActivity {
 					.subscribe();
 		}
 	}
-
-
-    /**
-     * Checks correctness of form data
-     *
-     * @return
-     */
-    private boolean checkData() {
-        boolean res = true;
-
-        if (password.getText().length() == passwordCheck.getText().length()
-                && passwordCheck.getText().length() == 0) {
-            return true;
-        }
-
-        boolean passwordOk = password.getText().toString().length() > 0;
-        boolean passwordCheckOk = passwordCheck.getText().toString().length() > 0 && password.getText().toString()
-                .equals(passwordCheck.getText().toString());
-        boolean questionOk = question.getText().toString().length() > 0;
-        boolean answerOk = answer.getText().toString().length() > 0;
-        boolean answerCheckOk = answerCheck.getText().toString().length() > 0 && answer.getText().toString().equals
-                (answerCheck.getText().toString());
-
-        if (!passwordOk || !passwordCheckOk || !questionOk || !answerOk || !answerCheckOk) {
-            res = false;
-            if (!passwordOk) {
-                password.setError(getString(R.string.settings_password_not_matching));
-            }
-            if (!passwordCheckOk) {
-                passwordCheck.setError(getString(R.string.settings_password_not_matching));
-            }
-            if (!questionOk) {
-                question.setError(getString(R.string.settings_password_question));
-            }
-            if (!answerOk) {
-                answer.setError(getString(R.string.settings_answer_not_matching));
-            }
-            if (!answerCheckOk) {
-                answerCheck.setError(getString(R.string.settings_answer_not_matching));
-            }
-        }
-        return res;
-    }
-
 
     @Override
     public void onBackPressed() {
