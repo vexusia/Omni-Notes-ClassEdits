@@ -73,4 +73,10 @@
     <dimen name="intro_bottom_padding">24dp</dimen>
     <dimen name="intro_side_padding">64dp</dimen>
 
+    <!-- Dropbox values -->
+    <dimen name="thumbnail_size">36dp</dimen>
+    <dimen name="fab_margin">16dp</dimen>
+    <dimen name="global_padding">16dp</dimen>
+
+
 </resources>
