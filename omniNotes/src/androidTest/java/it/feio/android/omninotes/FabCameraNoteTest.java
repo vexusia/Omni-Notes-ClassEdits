@@ -57,7 +57,7 @@ public class FabCameraNoteTest {
     @Rule
     public ActivityTestRule<MainActivity> mActivityTestRule = new ActivityTestRule<>(MainActivity.class);
 
-    @Test
+    //@Test
     public void fabCameraNoteTest() {
          // Added a sleep statement to match the app's execution delay.
  // The recommended way to handle such scenarios is to use Espresso idling resources:

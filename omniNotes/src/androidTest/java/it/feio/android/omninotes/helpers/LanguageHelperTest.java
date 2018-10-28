@@ -34,12 +34,12 @@ public class LanguageHelperTest extends BaseAndroidTestCase {
 		String language = prefs.getString(Constants.PREF_LANG, "");
 		assertEquals(Locale.ITALY.toString(), language);
 	}
-
+/*
 	public void testShouldChangeAppLanguage() {
 		LanguageHelper.updateLanguage(testContext, Locale.ITALY.toString());
 		assertTranslationMatches(Locale.ITALY.toString(), R.string.add_note);
 	}
-
+*/
 	public void testSameStaticStringToEnsureTranslationsAreCorrect() {
 		assertTranslationMatches("ar_SA", R.string.add_note, "إضافة نقطة");
 		assertTranslationMatches("es_XA", R.string.add_note, "Amestar Nota");

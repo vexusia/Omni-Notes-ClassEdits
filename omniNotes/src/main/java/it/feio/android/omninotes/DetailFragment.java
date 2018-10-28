@@ -369,33 +369,59 @@ public class DetailFragment extends BaseFragment implements OnReminderPickedList
 		}
 	}
 
-	private void handleIntents() {
+	public void handleIntents() {
 		Intent i = mainActivity.getIntent();
-
-		if (IntentChecker.checkAction(i, Constants.ACTION_MERGE)) {
-			noteOriginal = new Note();
-			note = new Note(noteOriginal);
-			noteTmp = getArguments().getParcelable(Constants.INTENT_NOTE);
-			if (i.getStringArrayListExtra("merged_notes") != null) {
-				mergedNotesIds = i.getStringArrayListExtra("merged_notes");
-			}
-		}
-
+		HandleActionMerge(i);
 		// Action called from home shortcut
-		if (IntentChecker.checkAction(i, Constants.ACTION_SHORTCUT, Constants.ACTION_NOTIFICATION_CLICK)) {
-			afterSavedReturnsToList = false;
-			noteOriginal = DbHelper.getInstance().getNote(i.getLongExtra(Constants.INTENT_KEY, 0));
-			// Checks if the note pointed from the shortcut has been deleted
-			try {
-				note = new Note(noteOriginal);
-				noteTmp = new Note(noteOriginal);
-			} catch (NullPointerException e) {
-				mainActivity.showToast(getText(R.string.shortcut_note_deleted), Toast.LENGTH_LONG);
-				mainActivity.finish();
-			}
-		}
-
+		HandleActionNotification(i);
 		// Check if is launched from a widget
+		HandleTakePhoto(i);
+		HandleFabTakePhoto(i);
+		// Handles third party apps requests of sharing
+		HandleGoogleNow(i);
+		HandleActionWidget(i);
+		i.setAction(null);
+	}
+
+	public void HandleActionWidget(Intent i) {
+		if (IntentChecker.checkAction(i, Intent.ACTION_MAIN, Constants.ACTION_WIDGET_SHOW_LIST, Constants
+				.ACTION_SHORTCUT_WIDGET, Constants.ACTION_WIDGET)) {
+			showKeyboard = true;
+		}
+	}
+
+	public void HandleGoogleNow(Intent i) {
+		if (IntentChecker.checkAction(i, Intent.ACTION_SEND, Intent.ACTION_SEND_MULTIPLE, Constants.INTENT_GOOGLE_NOW)
+				&& i.getType() != null) {
+
+			afterSavedReturnsToList = false;
+
+			if (noteTmp == null) noteTmp = new Note();
+
+			// Text title
+			String title = i.getStringExtra(Intent.EXTRA_SUBJECT);
+			if (title != null) {
+				noteTmp.setTitle(title);
+			}
+
+			// Text content
+			String content = i.getStringExtra(Intent.EXTRA_TEXT);
+			if (content != null) {
+				noteTmp.setContent(content);
+			}
+
+			importAttachments(i);
+
+		}
+	}
+
+	public void HandleFabTakePhoto(Intent i) {
+		if (IntentChecker.checkAction(i, Constants.ACTION_FAB_TAKE_PHOTO)) {
+			takePhoto();
+		}
+	}
+
+	public void HandleTakePhoto(Intent i) {
 		if (IntentChecker.checkAction(i, Constants.ACTION_WIDGET, Constants.ACTION_WIDGET_TAKE_PHOTO)) {
 
 			afterSavedReturnsToList = false;
@@ -425,41 +451,32 @@ public class DetailFragment extends BaseFragment implements OnReminderPickedList
 				takePhoto();
 			}
 		}
+	}
 
-		if (IntentChecker.checkAction(i, Constants.ACTION_FAB_TAKE_PHOTO)) {
-			takePhoto();
-		}
-
-		// Handles third party apps requests of sharing
-		if (IntentChecker.checkAction(i, Intent.ACTION_SEND, Intent.ACTION_SEND_MULTIPLE, Constants.INTENT_GOOGLE_NOW)
-				&& i.getType() != null) {
-
+	public void HandleActionNotification(Intent i) {
+		if (IntentChecker.checkAction(i, Constants.ACTION_SHORTCUT, Constants.ACTION_NOTIFICATION_CLICK)) {
 			afterSavedReturnsToList = false;
-
-			if (noteTmp == null) noteTmp = new Note();
-
-			// Text title
-			String title = i.getStringExtra(Intent.EXTRA_SUBJECT);
-			if (title != null) {
-				noteTmp.setTitle(title);
+			noteOriginal = DbHelper.getInstance().getNote(i.getLongExtra(Constants.INTENT_KEY, 0));
+			// Checks if the note pointed from the shortcut has been deleted
+			try {
+				note = new Note(noteOriginal);
+				noteTmp = new Note(noteOriginal);
+			} catch (NullPointerException e) {
+				mainActivity.showToast(getText(R.string.shortcut_note_deleted), Toast.LENGTH_LONG);
+				mainActivity.finish();
 			}
+		}
+	}
 
-			// Text content
-			String content = i.getStringExtra(Intent.EXTRA_TEXT);
-			if (content != null) {
-				noteTmp.setContent(content);
+	public void HandleActionMerge(Intent i) {
+		if (IntentChecker.checkAction(i, Constants.ACTION_MERGE)) {
+			noteOriginal = new Note();
+			note = new Note(noteOriginal);
+			noteTmp = getArguments().getParcelable(Constants.INTENT_NOTE);
+			if (i.getStringArrayListExtra("merged_notes") != null) {
+				mergedNotesIds = i.getStringArrayListExtra("merged_notes");
 			}
-
-			importAttachments(i);
-
 		}
-
-		if (IntentChecker.checkAction(i, Intent.ACTION_MAIN, Constants.ACTION_WIDGET_SHOW_LIST, Constants
-				.ACTION_SHORTCUT_WIDGET, Constants.ACTION_WIDGET)) {
-			showKeyboard = true;
-		}
-
-		i.setAction(null);
 	}
 
 	private void importAttachments(Intent i) {
@@ -640,45 +657,14 @@ public class DetailFragment extends BaseFragment implements OnReminderPickedList
 			Intent attachmentIntent;
 			if (Constants.MIME_TYPE_FILES.equals(attachment.getMime_type())) {
 
-				attachmentIntent = new Intent(Intent.ACTION_VIEW);
-				attachmentIntent.setDataAndType(uri, StorageHelper.getMimeType(mainActivity,
-						attachment.getUri()));
-				attachmentIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent
-						.FLAG_GRANT_WRITE_URI_PERMISSION);
-				if (IntentChecker.isAvailable(mainActivity.getApplicationContext(), attachmentIntent, null)) {
-					startActivity(attachmentIntent);
-				} else {
-					mainActivity.showMessage(R.string.feature_not_available_on_this_device, ONStyle.WARN);
-				}
+				StartAttachmentActivity(attachment, uri);
 
 				// Media files will be opened in internal gallery
 			} else if (Constants.MIME_TYPE_IMAGE.equals(attachment.getMime_type())
 					|| Constants.MIME_TYPE_SKETCH.equals(attachment.getMime_type())
 					|| Constants.MIME_TYPE_VIDEO.equals(attachment.getMime_type())) {
-				// Title
-				noteTmp.setTitle(getNoteTitle());
-				noteTmp.setContent(getNoteContent());
-				String title1 = TextHelper.parseTitleAndContent(mainActivity,
-						noteTmp)[0].toString();
-				// Images
-				int clickedImage = 0;
-				ArrayList<Attachment> images = new ArrayList<>();
-				for (Attachment mAttachment : noteTmp.getAttachmentsList()) {
-					if (Constants.MIME_TYPE_IMAGE.equals(mAttachment.getMime_type())
-							|| Constants.MIME_TYPE_SKETCH.equals(mAttachment.getMime_type())
-							|| Constants.MIME_TYPE_VIDEO.equals(mAttachment.getMime_type())) {
-						images.add(mAttachment);
-						if (mAttachment.equals(attachment)) {
-							clickedImage = images.size() - 1;
-						}
-					}
-				}
-				// Intent
-				attachmentIntent = new Intent(mainActivity, GalleryActivity.class);
-				attachmentIntent.putExtra(Constants.GALLERY_TITLE, title1);
-				attachmentIntent.putParcelableArrayListExtra(Constants.GALLERY_IMAGES, images);
-				attachmentIntent.putExtra(Constants.GALLERY_CLICKED_IMAGE, clickedImage);
-				startActivity(attachmentIntent);
+				StartImageSketchVideoActivity(attachment);
+
 
 			} else if (Constants.MIME_TYPE_AUDIO.equals(attachment.getMime_type())) {
 				playback(v, attachment.getUri());
@@ -686,6 +672,51 @@ public class DetailFragment extends BaseFragment implements OnReminderPickedList
 
 		});
 
+		SetGridLongClickListener();
+	}
+
+	private void StartAttachmentActivity(Attachment attachment, Uri uri) {
+		Intent attachmentIntent;
+		attachmentIntent = new Intent(Intent.ACTION_VIEW);
+		attachmentIntent.setDataAndType(uri, StorageHelper.getMimeType(mainActivity,
+                attachment.getUri()));
+		attachmentIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent
+                .FLAG_GRANT_WRITE_URI_PERMISSION);
+		if (IntentChecker.isAvailable(mainActivity.getApplicationContext(), attachmentIntent, null)) {
+            startActivity(attachmentIntent);
+        } else {
+            mainActivity.showMessage(R.string.feature_not_available_on_this_device, ONStyle.WARN);
+        }
+	}
+
+	private void StartImageSketchVideoActivity(Attachment attachment) {
+		Intent attachmentIntent;// Title
+		noteTmp.setTitle(getNoteTitle());
+		noteTmp.setContent(getNoteContent());
+		String title1 = TextHelper.parseTitleAndContent(mainActivity,
+                noteTmp)[0].toString();
+		// Images
+		int clickedImage = 0;
+		ArrayList<Attachment> images = new ArrayList<>();
+		for (Attachment mAttachment : noteTmp.getAttachmentsList()) {
+            if (Constants.MIME_TYPE_IMAGE.equals(mAttachment.getMime_type())
+                    || Constants.MIME_TYPE_SKETCH.equals(mAttachment.getMime_type())
+                    || Constants.MIME_TYPE_VIDEO.equals(mAttachment.getMime_type())) {
+                images.add(mAttachment);
+                if (mAttachment.equals(attachment)) {
+                    clickedImage = images.size() - 1;
+                }
+            }
+        }
+		// Intent
+		attachmentIntent = new Intent(mainActivity, GalleryActivity.class);
+		attachmentIntent.putExtra(Constants.GALLERY_TITLE, title1);
+		attachmentIntent.putParcelableArrayListExtra(Constants.GALLERY_IMAGES, images);
+		attachmentIntent.putExtra(Constants.GALLERY_CLICKED_IMAGE, clickedImage);
+		startActivity(attachmentIntent);
+	}
+
+	private void SetGridLongClickListener() {
 		mGridView.setOnItemLongClickListener((parent, v, position, id) -> {
 			// To avoid deleting audio attachment during playback
 			if (mPlayer != null) return false;
@@ -1383,40 +1414,22 @@ public class DetailFragment extends BaseFragment implements OnReminderPickedList
 		if (resultCode == Activity.RESULT_OK) {
 			switch (requestCode) {
 				case TAKE_PHOTO:
-					attachment = new Attachment(attachmentUri, Constants.MIME_TYPE_IMAGE);
-					addAttachment(attachment);
-					mAttachmentAdapter.notifyDataSetChanged();
-					mGridView.autoresize();
+					ProcessTakePhotoResult();
 					break;
 				case TAKE_VIDEO:
-					// Gingerbread doesn't allow custom folder so data are retrieved from intent
-					if (Build.VERSION.SDK_INT > Build.VERSION_CODES.GINGERBREAD_MR1) {
-						attachment = new Attachment(attachmentUri, Constants.MIME_TYPE_VIDEO);
-					} else {
-						attachment = new Attachment(intent.getData(), Constants.MIME_TYPE_VIDEO);
-					}
-					addAttachment(attachment);
-					mAttachmentAdapter.notifyDataSetChanged();
-					mGridView.autoresize();
+					ProcessTakeVideoResult(intent);
 					break;
 				case FILES:
 					onActivityResultManageReceivedFiles(intent);
 					break;
 				case SET_PASSWORD:
-					noteTmp.setPasswordChecked(true);
-					lockUnlock();
+					ProcessSetPasswordResult();
 					break;
 				case SKETCH:
-					attachment = new Attachment(attachmentUri, Constants.MIME_TYPE_SKETCH);
-					addAttachment(attachment);
-					mAttachmentAdapter.notifyDataSetChanged();
-					mGridView.autoresize();
+					ProcessSketchResult(attachmentUri, Constants.MIME_TYPE_SKETCH);
 					break;
 				case CATEGORY:
-					mainActivity.showMessage(R.string.category_saved, ONStyle.CONFIRM);
-					Category category = intent.getParcelableExtra("category");
-					noteTmp.setCategory(category);
-					setTagMarkerColor(category);
+					ProcessCategoryResult(intent);
 					break;
 				case DETAIL:
 					mainActivity.showMessage(R.string.note_updated, ONStyle.CONFIRM);
@@ -1425,6 +1438,46 @@ public class DetailFragment extends BaseFragment implements OnReminderPickedList
 					Log.e(Constants.TAG, "Wrong element choosen: " + requestCode);
 			}
 		}
+	}
+
+	public void ProcessCategoryResult(Intent intent) {
+		mainActivity.showMessage(R.string.category_saved, ONStyle.CONFIRM);
+		Category category = intent.getParcelableExtra("category");
+		noteTmp.setCategory(category);
+		setTagMarkerColor(category);
+	}
+
+	public void ProcessSketchResult(Uri attachmentUri, String mimeTypeSketch) {
+		Attachment attachment;
+		attachment = new Attachment(attachmentUri, mimeTypeSketch);
+		addAttachment(attachment);
+		mAttachmentAdapter.notifyDataSetChanged();
+		mGridView.autoresize();
+	}
+
+	public void ProcessSetPasswordResult() {
+		noteTmp.setPasswordChecked(true);
+		lockUnlock();
+	}
+
+	public void ProcessTakeVideoResult(Intent intent) {
+		Attachment attachment;// Gingerbread doesn't allow custom folder so data are retrieved from intent
+		if (Build.VERSION.SDK_INT > Build.VERSION_CODES.GINGERBREAD_MR1) {
+            attachment = new Attachment(attachmentUri, Constants.MIME_TYPE_VIDEO);
+        } else {
+            attachment = new Attachment(intent.getData(), Constants.MIME_TYPE_VIDEO);
+        }
+		addAttachment(attachment);
+		mAttachmentAdapter.notifyDataSetChanged();
+		mGridView.autoresize();
+	}
+
+	public void ProcessTakePhotoResult() {
+		Attachment attachment;
+		attachment = new Attachment(attachmentUri, Constants.MIME_TYPE_IMAGE);
+		addAttachment(attachment);
+		mAttachmentAdapter.notifyDataSetChanged();
+		mGridView.autoresize();
 	}
 
 	private void onActivityResultManageReceivedFiles(Intent intent) {
@@ -2192,28 +2245,13 @@ public class DetailFragment extends BaseFragment implements OnReminderPickedList
 					takePhoto();
 					break;
 				case R.id.recording:
-					if (!isRecording) {
-						startRecording(v);
-					} else {
-						stopRecording();
-						Attachment attachment = new Attachment(Uri.fromFile(new File(recordName)), Constants
-								.MIME_TYPE_AUDIO);
-						attachment.setLength(audioRecordingTime);
-						addAttachment(attachment);
-						mAttachmentAdapter.notifyDataSetChanged();
-						mGridView.autoresize();
-					}
+					RecordingAction(v);
 					break;
 				case R.id.video:
 					takeVideo();
 					break;
 				case R.id.files:
-					if (ContextCompat.checkSelfPermission(getActivity(), Manifest.permission.READ_EXTERNAL_STORAGE) ==
-							PackageManager.PERMISSION_GRANTED) {
-						startGetContentAction();
-					} else {
-						askReadExternalStoragePermission();
-					}
+					AttachFiles();
 					break;
 				case R.id.sketch:
 					takeSketch(null);
@@ -2225,16 +2263,43 @@ public class DetailFragment extends BaseFragment implements OnReminderPickedList
 					addTimestamp();
 					break;
 				case R.id.pushbullet:
-					MessagingExtension.mirrorMessage(mainActivity, getString(R.string.app_name),
-							getString(R.string.pushbullet),
-							getNoteContent(), BitmapFactory.decodeResource(getResources(),
-									R.drawable.ic_stat_literal_icon),
-							null, 0);
+					ExecutePushBullet();
 					break;
 				default:
 					Log.e(Constants.TAG, "Wrong element choosen: " + v.getId());
 			}
 			if (!isRecording) attachmentDialog.dismiss();
+		}
+
+		public void ExecutePushBullet() {
+			MessagingExtension.mirrorMessage(mainActivity, getString(R.string.app_name),
+                    getString(R.string.pushbullet),
+                    getNoteContent(), BitmapFactory.decodeResource(getResources(),
+                            R.drawable.ic_stat_literal_icon),
+                    null, 0);
+		}
+
+		public void AttachFiles() {
+			if (ContextCompat.checkSelfPermission(getActivity(), Manifest.permission.READ_EXTERNAL_STORAGE) ==
+                    PackageManager.PERMISSION_GRANTED) {
+                startGetContentAction();
+            } else {
+                askReadExternalStoragePermission();
+            }
+		}
+
+		public void RecordingAction(View v) {
+			if (!isRecording) {
+                startRecording(v);
+            } else {
+                stopRecording();
+                Attachment attachment = new Attachment(Uri.fromFile(new File(recordName)), Constants
+                        .MIME_TYPE_AUDIO);
+                attachment.setLength(audioRecordingTime);
+                addAttachment(attachment);
+                mAttachmentAdapter.notifyDataSetChanged();
+                mGridView.autoresize();
+            }
 		}
 	}
 

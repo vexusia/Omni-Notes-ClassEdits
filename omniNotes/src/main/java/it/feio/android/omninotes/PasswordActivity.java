@@ -40,11 +40,11 @@ import rx.schedulers.Schedulers;
 public class PasswordActivity extends BaseActivity {
 
     private ViewGroup crouton_handle;
-    private EditText passwordCheck;
-    private EditText password;
-    private EditText question;
-    private EditText answer;
-    private EditText answerCheck;
+    public EditText passwordCheck;
+	public EditText password;
+	public EditText question;
+	public EditText answer;
+	public EditText answerCheck;
     private PasswordActivity mActivity;
     private PasswordUtil pwUtil;
 
