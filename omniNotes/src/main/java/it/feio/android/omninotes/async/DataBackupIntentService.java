@@ -45,6 +45,7 @@ import it.feio.android.springpadimporter.models.SpringpadComment;
 import it.feio.android.springpadimporter.models.SpringpadElement;
 import it.feio.android.springpadimporter.models.SpringpadItem;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.filefilter.FileFilterUtils;
 import org.apache.commons.io.filefilter.RegexFileFilter;
 import org.apache.commons.io.filefilter.TrueFileFilter;
@@ -58,7 +59,11 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.*;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
+import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
+import java.io.InputStream;
+
 
 
 public class DataBackupIntentService extends IntentService implements OnAttachingFileListener {
@@ -118,7 +123,6 @@ public class DataBackupIntentService extends IntentService implements OnAttachin
 
         // Database backup
         exportDB(backupDir);
-//		exportNotes(backupDir);
 
         Log.d("directory,", "name = "+backupDir.getName());
         Log.d("directory,", "path = "+backupDir.getAbsolutePath());
@@ -143,6 +147,55 @@ public class DataBackupIntentService extends IntentService implements OnAttachin
         String text = backupDir.getPath();
         createNotification(intent, this, title, text, backupDir);
     }
+
+
+
+    private boolean extractFolder(File destination, File zipFile) {
+        int BUFFER = 8192;
+        File file = zipFile;
+        //This can throw ZipException if file is not valid zip archive
+        try{
+            ZipFile zip = new ZipFile(file);
+            String newPath = destination.getAbsolutePath() + File.separator + FilenameUtils.removeExtension(zipFile.getName());
+            //Create destination directory
+            new File(newPath).mkdir();
+            Enumeration zipFileEntries = zip.entries();
+
+            //Iterate overall zip file entries
+            while (zipFileEntries.hasMoreElements())
+            {
+                ZipEntry entry = (ZipEntry) zipFileEntries.nextElement();
+                String currentEntry = entry.getName();
+                File destFile = new File(newPath, currentEntry);
+                File destinationParent = destFile.getParentFile();
+                //If entry is directory create sub directory on file system
+                destinationParent.mkdirs();
+
+                if (!entry.isDirectory())
+                {
+                    //Copy over data into destination file
+                    BufferedInputStream is = new BufferedInputStream(zip
+                            .getInputStream(entry));
+                    int currentByte;
+                    byte data[] = new byte[BUFFER];
+                    //copying file data using streams
+                    FileOutputStream fos = new FileOutputStream(destFile);
+                    BufferedOutputStream dest = new BufferedOutputStream(fos, BUFFER);
+                    while ((currentByte = is.read(data, 0, BUFFER)) != -1) {
+                        dest.write(data, 0, currentByte);
+                    }
+                    dest.flush();
+                    dest.close();
+                    is.close();
+                }
+            }
+        }catch(Exception e){
+            Log.d("ExceptionEE", e.toString());
+            return false;
+        }
+        return true;
+    }
+
 
     /*
      *
@@ -185,9 +238,7 @@ public class DataBackupIntentService extends IntentService implements OnAttachin
         return true;
     }
 
-    /*
-     * Zips a subfolder
-     */
+
     private void zipSubFolder(ZipOutputStream out, File folder,
                               int basePathLength) throws IOException {
 
@@ -217,8 +268,8 @@ public class DataBackupIntentService extends IntentService implements OnAttachin
         }
     }
 
-    /*
-     * gets the last path component
+
+    /* gets the last path component
      *
      * Example: getLastPathComponent("downloads/example/fileToZip");
      * Result: "fileToZip"
@@ -232,49 +283,23 @@ public class DataBackupIntentService extends IntentService implements OnAttachin
     }
 
 
-
-//    /*
-//        Zip directory files from exporting backup.
-//        -Backup must exist
-//    */
-//    public static void zip( List<File> files, String zipFile ) throws IOException {
-//        final int BUFFER_SIZE = 2048;
-//        BufferedInputStream origin = null;
-//        ZipOutputStream out = new ZipOutputStream(new BufferedOutputStream(new FileOutputStream(zipFile)));
-//        try {
-//            byte data[] = new byte[BUFFER_SIZE];
-//            for ( File file : files ) {
-//                FileInputStream fileInputStream = new FileInputStream( file );
-//                origin = new BufferedInputStream(fileInputStream, BUFFER_SIZE);
-//                String filePath = file.getAbsolutePath();
-//                try {
-//                    ZipEntry entry = new ZipEntry( filePath.substring( filePath.lastIndexOf("/") + 1 ) );
-//                    out.putNextEntry(entry);
-//                    int count;
-//                    while ((count = origin.read(data, 0, BUFFER_SIZE)) != -1) {
-//                        out.write(data, 0, count);
-//                    }
-//                }
-//                finally {
-//                    origin.close();
-//                }
-//            }
-//        }
-//        finally {
-//            out.close();
-//        }
-//    }
-
-
     synchronized private void importData(Intent intent) {
 
         // Gets backup folder
-        String backupName = intent.getStringExtra(INTENT_BACKUP_NAME);
-        File backupDir = StorageHelper.getBackupDir(backupName);
+        String backupName = FilenameUtils.removeExtension(intent.getStringExtra(INTENT_BACKUP_NAME));
+
+        // Extract zip backup folder
+        String backupHomeDir = "/storage/emulated/0/Omni Notes Foss/";
+        String zip = backupName+".zip";
+        File destinationfile = new File(backupHomeDir);
+        File zipfile = new File(backupHomeDir+zip);
+        extractFolder(destinationfile, zipfile);
+
+        // Zip process nests the directory in a second directory hence +"/"+
+        File backupDir = StorageHelper.getBackupDir(backupName+"/"+backupName);
 
         // Database backup
         importDB(backupDir);
-//        importNotes(backupDir);
 
         // Attachments backup
         importAttachments(backupDir);
@@ -284,10 +309,15 @@ public class DataBackupIntentService extends IntentService implements OnAttachin
 
 		// Reminders restore
 		resetReminders();
-
+///////////////////////////////////////////////////////////////////////////////////////////////////
+        //delete extra unzipped backup folder
+        StorageHelper.delete(this, backupHomeDir+backupName);
+        Log.d("chk", "deleton name = "+backupHomeDir+backupName);
+///////////////////////////////////////////////////////////////////////////////////////////////////
         String title = getString(R.string.data_import_completed);
         String text = getString(R.string.click_to_refresh_application);
         createNotification(intent, this, title, text, backupDir);
+        System.exit(0);
     }
 
 
