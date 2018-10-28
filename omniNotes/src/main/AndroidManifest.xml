@@ -61,6 +61,25 @@
             android:value="@integer/google_play_services_version"
             tools:replace="android:value"/>
 
+
+        <!-- Dropbox activity   -->
+        <!-- Dropbox activity   -->
+        <!-- Dropbox activity   -->
+        <!-- Dropbox activity   -->
+        <activity
+            android:name="com.dropbox.core.android.AuthActivity"
+            android:configChanges="orientation|keyboard"
+            android:launchMode="singleTask">
+            <intent-filter>
+                <data android:scheme="db-4v1a9cgcempjxp0" />
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+
+
+
         <!-- List and Detail -->
         <activity
             android:name=".MainActivity"

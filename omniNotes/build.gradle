@@ -101,7 +101,7 @@ android {
 
 dependencies {
     testCompile 'junit:junit:4.12'
-  //  testCompile 'org.mockito:mockito-all:1.9.5'
+    //  testCompile 'org.mockito:mockito-all:1.9.5'
     testCompile 'org.powermock:powermock:1.6.5'
     testCompile 'org.powermock:powermock-module-junit4:1.6.5'
     testCompile 'org.powermock:powermock-api-mockito:1.6.5'
@@ -175,6 +175,9 @@ dependencies {
     }
     fossCompile 'com.jakewharton.timber:timber:4.5.1'
     testCompile 'junit:junit:4.12'
+    implementation 'com.dropbox.core:dropbox-core-sdk:3.0.10'
+    implementation 'com.squareup.okhttp3:okhttp:3.10.0'
+    implementation 'com.squareup.picasso:picasso:2.71828'
 }
 
 configurations.all {

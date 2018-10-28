@@ -30,6 +30,8 @@
     <string name="bitcoin_url">http://goo.gl/I6Xboe</string>
     <string name="help_online_url">https://goo.gl/Q843oh</string>
 
+    <!-- DB -->
+    <string name="app_key">4v1a9cgcempjxp0</string>
 
     <!-- Activities -->
     <string name="title_item_list">Notes</string>
@@ -234,6 +236,8 @@
     <string name="settings_import">Restore or delete backups</string>
     <string name="settings_import_from_springpad">Import notes from Springpad</string>
     <string name="settings_import_from_springpad_summary">Select your Springpad exported archive and be sure to be connected to internet</string>
+    <string name="settings_sync_db">Sync with Dropbox</string>
+    <string name="settings_sync_db_summary">Upload or restore backups from cloud</string>
     <string name="settings_sync_drive">Sync with Google Drive</string>
     <string name="settings_sync_drive_summary">Register the application to synchronize data on Google Drive storage service</string>
     <string name="export_success">File exported successfully into folder</string>
