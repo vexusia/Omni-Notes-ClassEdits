@@ -32,6 +32,7 @@
 
     <!-- DB -->
     <string name="app_key">4v1a9cgcempjxp0</string>
+    <string name="title_activity_files">Cloud Backups</string>
 
     <!-- Activities -->
     <string name="title_item_list">Notes</string>

@@ -42,6 +42,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 import com.afollestad.materialdialogs.MaterialDialog;
 import it.feio.android.analitica.AnalyticsHelper;
+import it.feio.android.omninotes.DropboxHelpers.UserActivity;
 import it.feio.android.omninotes.async.DataBackupIntentService;
 import it.feio.android.omninotes.helpers.AppVersionHelper;
 import it.feio.android.omninotes.helpers.LanguageHelper;
@@ -179,34 +180,17 @@ public class SettingsFragment extends PreferenceFragment {
 			});
 		}
 
-		Preference googleCloudSync = findPreference("settings_sync_drive");
-		if (googleCloudSync != null) {
-			googleCloudSync.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
-				@Override
-				public boolean onPreferenceClick(Preference preference) {
-
-					//Toast.makeText(getActivity(),"test",Toast.LENGTH_SHORT).show();
-					return false;
-				}
-			});
+		// Connect to dropbox
+		Preference dropboxSync = findPreference("settings_sync_drive");
+		if (dropboxSync != null) {
+		    dropboxSync.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+                @Override
+                public boolean onPreferenceClick(Preference preference) {
+                    dropboxDeploy();
+                    return true;
+                }
+            });
 		}
-//		Preference syncWithDrive = findPreference("settings_backup_drive");
-//		importFromSpringpad.setOnPreferenceClickListener(new OnPreferenceClickListener() {
-//			@Override
-//			public boolean onPreferenceClick(Preference arg0) {
-//				Intent intent;
-//				intent = new Intent(Intent.ACTION_GET_CONTENT);
-//				intent.addCategory(Intent.CATEGORY_OPENABLE);
-//				intent.setType("application/zip");
-//				if (!IntentChecker.isAvailable(getActivity(), intent, null)) {
-//					Crouton.makeText(getActivity(), R.string.feature_not_available_on_this_device,
-// ONStyle.ALERT).show();
-//					return false;
-//				}
-//				startActivityForResult(intent, SPRINGPAD_IMPORT);
-//				return false;
-//			}
-//		});
 
 
 		// Swiping action
@@ -476,49 +460,13 @@ public class SettingsFragment extends PreferenceFragment {
 		}
 
 
-		// Donations
-//        Preference donation = findPreference("settings_donation");
-//        if (donation != null) {
-//            donation.setOnPreferenceClickListener(new OnPreferenceClickListener() {
-//                @Override
-//                public boolean onPreferenceClick(Preference preference) {
-//                    AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(getActivity());
-//
-//                    ArrayList<ImageAndTextItem> options = new ArrayList<ImageAndTextItem>();
-//                    options.add(new ImageAndTextItem(R.drawable.ic_paypal, getString(R.string.paypal)));
-//                    options.add(new ImageAndTextItem(R.drawable.ic_bitcoin, getString(R.string.bitcoin)));
-//
-//                    alertDialogBuilder
-//                            .setAdapter(new ImageAndTextAdapter(getActivity(), options),
-//                                    new DialogInterface.OnClickListener() {
-//                                        @Override
-//                                        public void onClick(DialogInterface dialog, int which) {
-//                                            switch (which) {
-//                                                case 0:
-//                                                    Intent intentPaypal = new Intent(Intent.ACTION_VIEW);
-//                                                    intentPaypal.setData(Uri.parse(getString(R.string.paypal_url)));
-//                                                    startActivity(intentPaypal);
-//                                                    break;
-//                                                case 1:
-//                                                    Intent intentBitcoin = new Intent(Intent.ACTION_VIEW);
-//                                                    intentBitcoin.setData(Uri.parse(getString(R.string.bitcoin_url)));
-//                                                    startActivity(intentBitcoin);
-//                                                    break;
-//                                            }
-//                                        }
-//                                    });
-//
-//
-//                    // create alert dialog
-//                    AlertDialog alertDialog = alertDialogBuilder.create();
-//                    // show it
-//                    alertDialog.show();
-//                    return false;
-//                }
-//            });
-//        }
+
 	}
 
+	private void dropboxDeploy() {
+		Intent intent = new Intent(this.getActivity(), UserActivity.class);
+		startActivity(intent);
+	}
 
 	private void importNotes() {
 		final CharSequence[] backups = StorageHelper.getExternalStoragePublicDir().list();
@@ -688,6 +636,7 @@ public class SettingsFragment extends PreferenceFragment {
 					String notificationSound = uri == null ? null : uri.toString();
 					prefs.edit().putString("settings_notification_ringtone", notificationSound).apply();
 					break;
+
 
 				default:
 					Log.e(Constants.TAG, "Wrong element choosen: " + requestCode);

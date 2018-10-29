@@ -78,7 +78,13 @@
             </intent-filter>
         </activity>
 
+        <activity
+            android:name="it.feio.android.omninotes.DropboxHelpers.UserActivity"
+            android:theme="@style/DropboxTheme"></activity>
 
+        <activity android:name="it.feio.android.omninotes.DropboxHelpers.FilesActivity"
+            android:theme="@style/DropboxTheme"
+            android:label="@string/title_activity_files"></activity>
 
         <!-- List and Detail -->
         <activity

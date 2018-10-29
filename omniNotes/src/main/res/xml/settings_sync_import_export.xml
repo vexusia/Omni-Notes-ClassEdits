@@ -34,6 +34,6 @@
     <Preference
         android:key="settings_sync_drive"
         android:title="@string/settings_sync_db"
-        android:summary="@string/settings_sync_db_summary"/>
+        android:summary="@string/settings_sync_db_summary" />
 
 </PreferenceScreen>
