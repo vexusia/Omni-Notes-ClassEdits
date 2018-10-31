@@ -34,8 +34,8 @@ public class BaseFragment extends Fragment {
 	@Override
 	public void onDestroy() {
 		super.onDestroy();
-		RefWatcher refWatcher = OmniNotes.getRefWatcher();
-		refWatcher.watch(this);
+//		RefWatcher refWatcher = OmniNotes.getRefWatcher();
+//		refWatcher.watch(this);
 	}
 
 }
