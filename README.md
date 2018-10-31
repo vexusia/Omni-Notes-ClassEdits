@@ -6,7 +6,9 @@ Omni-Notes
 
 [![codebeat badge](https://codebeat.co/badges/d4322c00-0e03-4389-907c-4bf0e1606b68)](https://codebeat.co/projects/github-com-vexusia-omni-notes-classedits-develop)
 
+Fork of omni-notes repo used solely for software quality classwork testing and modifications. This is not the official repo and should not be interpreted as such.
 
+Link to official repo: https://github.com/federicoiosue/Omni-Notes
 
 ## License
 
