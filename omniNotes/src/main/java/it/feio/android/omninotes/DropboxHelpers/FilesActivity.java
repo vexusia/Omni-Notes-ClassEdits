@@ -1,6 +1,7 @@
 package it.feio.android.omninotes.DropboxHelpers;
 
 import android.Manifest;
+import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -63,6 +64,10 @@ public class FilesActivity extends DropboxActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        if(!isReadStoragePermissionGranted()){
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, 1);
+        }
+
         String path = getIntent().getStringExtra(EXTRA_PATH);
         mPath = path == null ? "" : path;
 
@@ -71,14 +76,16 @@ public class FilesActivity extends DropboxActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.app_bar);
         setSupportActionBar(toolbar);
 
+
         FloatingActionButton fab = (FloatingActionButton)findViewById(R.id.fab);
+
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                File test =  new File ("/storage/emulated/0/Omni Notes Foss/");
 
                 if(isReadStoragePermissionGranted()){
-                    // If the parent dir doesn't exist, create it
+                    File test =  new File ("/storage/emulated/0/Omni Notes Foss/");
+
                     if (!test.exists()) {
                         if (test.mkdirs()) {
                             Log.d("chk", "directory made for storage");
@@ -135,12 +142,9 @@ public class FilesActivity extends DropboxActivity {
                     }
                 }
 
-//
-
-
-
             }
         });
+
         //init picaso client
         PicassoClient.init(this,DropboxClientFactory.getClient());
         RecyclerView recyclerView = (RecyclerView) findViewById(R.id.files_list);
@@ -165,6 +169,7 @@ public class FilesActivity extends DropboxActivity {
 
 
     public  boolean isReadStoragePermissionGranted() {
+
         if (Build.VERSION.SDK_INT >= 23) {
             if (checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE)
                     == PackageManager.PERMISSION_GRANTED) {
@@ -172,8 +177,9 @@ public class FilesActivity extends DropboxActivity {
                 return true;
             } else {
 
+                Toast.makeText(getApplicationContext(),"Storage permission required to use feature.",Toast.LENGTH_SHORT).show();
                 Log.v("chk","Permission is revoked1");
-                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, 3);
+                //ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, 1);
                 return false;
             }
         }
@@ -241,24 +247,28 @@ public class FilesActivity extends DropboxActivity {
         }
 
         if (granted) {
-            performAction(action,null);
-        } else {
             switch (action) {
-                case UPLOAD:
-                    Toast.makeText(this,
-                            "Can't upload file: read access denied. " +
-                                    "Please grant storage permissions to use this functionality.",
-                            Toast.LENGTH_LONG)
-                            .show();
-                    break;
                 case DOWNLOAD:
-                    Toast.makeText(this,
-                            "Can't download file: write access denied. " +
-                                    "Please grant storage permissions to use this functionality.",
-                            Toast.LENGTH_LONG)
-                            .show();
+                    performAction(action,null);
                     break;
             }
+            performAction(action,null);
+//        } else {
+//            switch (action) {
+//                case UPLOAD:
+//                    Toast.makeText(this,
+//                            "Please grant storage permissions to use this functionality.",
+//                            Toast.LENGTH_LONG)
+//                            .show();
+//                    break;
+//                case DOWNLOAD:
+//                    Toast.makeText(this,
+//                            "Can't download file: write access denied. " +
+//                                    "Please grant storage permissions to use this functionality.",
+//                            Toast.LENGTH_LONG)
+//                            .show();
+//                    break;
+//            }
         }
     }
 
@@ -481,11 +491,8 @@ public class FilesActivity extends DropboxActivity {
     public void onBackPressed() {
         Log.d("chk", "onBackPressed Called");
         Intent intent = new Intent(this, MainActivity.class);
-
-
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-
+//        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(intent);
-
+        this.finish();
     }
 }
