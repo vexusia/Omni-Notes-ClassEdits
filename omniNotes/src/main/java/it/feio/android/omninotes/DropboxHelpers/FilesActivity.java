@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
@@ -75,53 +76,69 @@ public class FilesActivity extends DropboxActivity {
             @Override
             public void onClick(View v) {
                 File test =  new File ("/storage/emulated/0/Omni Notes Foss/");
-                File[] files = test.listFiles();
 
-                final List<String> fileList=new ArrayList<String>();
-                for(File file :files){
-                    fileList.add(file.getPath());
-                }
-                Log.d("chk", "list of files====="+fileList);
-
-                if(!fileList.isEmpty()){
-
-                    AlertDialog.Builder builder = new AlertDialog.Builder(FilesActivity.this);
-                    builder.setTitle("Choose a backup to upload");
-
-                    final String[] arr = new String[fileList.size()];
-                    for(int i =0; i < fileList.size(); i++){
-                        arr[i]= removeExtension(fileList.get(i).toString());
+                if(isReadStoragePermissionGranted()){
+                    // If the parent dir doesn't exist, create it
+                    if (!test.exists()) {
+                        if (test.mkdirs()) {
+                            Log.d("chk", "directory made for storage");
+                        } else {
+                            Log.d("chk", "error making omninotes directory..");
+                        }
                     }
 
-                    builder.setSingleChoiceItems(arr,0, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            // user checked an item
-                            mSelection = which;
-                            // Toast.makeText(getApplicationContext(),"You picked"+ which,Toast.LENGTH_SHORT).show();
+                    File[] files = test.listFiles();
+                    final List<String> fileList=new ArrayList<String>();
+                    for(File file :files){
+                        fileList.add(file.getPath());
+                    }
+                    Log.d("chk", "list of files====="+fileList);
+
+                    if(!fileList.isEmpty()){
+
+                        AlertDialog.Builder builder = new AlertDialog.Builder(FilesActivity.this);
+                        builder.setTitle("Choose a backup to upload");
+
+                        final String[] arr = new String[fileList.size()];
+                        for(int i =0; i < fileList.size(); i++){
+                            arr[i]= removeExtension(fileList.get(i).toString());
                         }
-                    });
-                    final String directory = "content://com.android.externalstorage.documents/document/primary%3AOmni%20Notes%20Foss%2F";
-                    // add OK and Cancel buttons
-                    builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            //Toast.makeText(getApplicationContext(),"You picked"+ mSelection,Toast.LENGTH_SHORT).show();
-                            Log.d("chk", "you selected0------"+arr[mSelection]);
-                            Log.d("chk", "Actual file path====="+fileList.get(mSelection));
-                            performWithPermissions(FileAction.UPLOAD,directory+arr[mSelection]+".zip");////////////////////////////////////////////////////////////////////////////////////////////
-                        }
-                    });
-                    builder.setNegativeButton("Cancel", null);
 
-                    // create and show the alert dialog
-                    AlertDialog dialog = builder.create();
-                    dialog.show();
+                        builder.setSingleChoiceItems(arr,0, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                // user checked an item
+                                mSelection = which;
+                                // Toast.makeText(getApplicationContext(),"You picked"+ which,Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                        final String directory = "content://com.android.externalstorage.documents/document/primary%3AOmni%20Notes%20Foss%2F";
+                        // add OK and Cancel buttons
+                        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                //Toast.makeText(getApplicationContext(),"You picked"+ mSelection,Toast.LENGTH_SHORT).show();
+                                Log.d("chk", "you selected0------"+arr[mSelection]);
+                                Log.d("chk", "Actual file path====="+fileList.get(mSelection));
+                                performWithPermissions(FileAction.UPLOAD,directory+arr[mSelection]+".zip");////////////////////////////////////////////////////////////////////////////////////////////
+                            }
+                        });
+                        builder.setNegativeButton("Cancel", null);
+
+                        // create and show the alert dialog
+                        AlertDialog dialog = builder.create();
+                        dialog.show();
 
 
-                }else{
-                    Toast.makeText(getApplicationContext(),"No local backups found on device.",Toast.LENGTH_SHORT).show();
+                    }else{
+                        Toast.makeText(getApplicationContext(),"No local backups found on device.",Toast.LENGTH_SHORT).show();
+                    }
                 }
+
+//
+
+
+
             }
         });
         //init picaso client
@@ -143,6 +160,27 @@ public class FilesActivity extends DropboxActivity {
         recyclerView.setAdapter(mFilesAdapter);
 
         mSelectedFile = null;
+    }
+
+
+
+    public  boolean isReadStoragePermissionGranted() {
+        if (Build.VERSION.SDK_INT >= 23) {
+            if (checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE)
+                    == PackageManager.PERMISSION_GRANTED) {
+                Log.v("chk","Permission is granted1");
+                return true;
+            } else {
+
+                Log.v("chk","Permission is revoked1");
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, 3);
+                return false;
+            }
+        }
+        else { //permission is automatically granted on sdk<23 upon installation
+            Log.v("chk","Permission is granted1");
+            return true;
+        }
     }
 
 
