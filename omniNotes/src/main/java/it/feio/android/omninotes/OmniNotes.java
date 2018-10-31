@@ -61,9 +61,9 @@ public class OmniNotes extends MultiDexApplication {
 			StrictMode.enableDefaults();
 		}
 
-		initAcra(this);
+		//initAcra(this);
 
-		initLeakCanary();
+		//initLeakCanary();
 	}
 
 	private void initLeakCanary() {
