@@ -176,7 +176,6 @@ public class FilesActivity extends DropboxActivity {
                 Log.v("chk","Permission is granted1");
                 return true;
             } else {
-
                 Toast.makeText(getApplicationContext(),"Storage permission required to use feature.",Toast.LENGTH_SHORT).show();
                 Log.v("chk","Permission is revoked1");
                 //ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, 1);
@@ -253,22 +252,21 @@ public class FilesActivity extends DropboxActivity {
                     break;
             }
             performAction(action,null);
-//        } else {
-//            switch (action) {
-//                case UPLOAD:
-//                    Toast.makeText(this,
-//                            "Please grant storage permissions to use this functionality.",
-//                            Toast.LENGTH_LONG)
-//                            .show();
-//                    break;
-//                case DOWNLOAD:
-//                    Toast.makeText(this,
-//                            "Can't download file: write access denied. " +
-//                                    "Please grant storage permissions to use this functionality.",
-//                            Toast.LENGTH_LONG)
-//                            .show();
-//                    break;
-//            }
+        } else {
+            switch (action) {
+                case UPLOAD:
+                    Toast.makeText(this,
+                            "Please grant storage permissions to use this functionality.",
+                            Toast.LENGTH_LONG)
+                            .show();
+                    break;
+                case DOWNLOAD:
+                    Toast.makeText(this,
+                            "Please grant storage permissions to use this functionality.",
+                            Toast.LENGTH_LONG)
+                            .show();
+                    break;
+            }
         }
     }
 
@@ -353,21 +351,6 @@ public class FilesActivity extends DropboxActivity {
 
     }
 
-    private void viewFileInExternalApp(File result) {
-        Intent intent = new Intent(Intent.ACTION_VIEW);
-        MimeTypeMap mime = MimeTypeMap.getSingleton();
-        String ext = result.getName().substring(result.getName().indexOf(".") + 1);
-        String type = mime.getMimeTypeFromExtension(ext);
-
-        intent.setDataAndType(Uri.fromFile(result), type);
-
-        // Check for a handler first to avoid a crash
-        PackageManager manager = getPackageManager();
-        List<ResolveInfo> resolveInfo = manager.queryIntentActivities(intent, 0);
-        if (resolveInfo.size() > 0) {
-            startActivity(intent);
-        }
-    }
 
     private void uploadFile(String fileUri) {
         final ProgressDialog dialog = new ProgressDialog(this);
