@@ -23,12 +23,12 @@
             android:title="@string/settings_error_reporting"
             android:summaryOn="@string/settings_error_reporting_summary_on"
             android:summaryOff="@string/settings_error_reporting_summary_off"
-            android:defaultValue="true"/>
+            android:defaultValue="false"/>
 
     <SwitchPreference
             android:key="settings_send_analytics"
             android:title="@string/settings_send_analytics"
             android:summary="@string/settings_send_analytics_summary"
-            android:defaultValue="true"/>
+            android:defaultValue="false"/>
 
 </PreferenceScreen>
