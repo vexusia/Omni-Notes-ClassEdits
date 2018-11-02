@@ -15,21 +15,21 @@ public class PasswordUtil {
     }
     public boolean HasValidationError(String password, String passwordCheck,String question, String answer, String answerCheck) {
         if (!this.FieldOk(password)) {
-            return false;
+            return true;
         }
         if (!this.PasswordCheckOk(password,passwordCheck)) {
-            return false;
+            return true;
         }
         if (!this.FieldOk(question)) {
-            return false;
+            return true;
         }
         if (!this.FieldOk(answer)) {
-            return false;
+            return true;
         }
         if (!this.AnswerCheckOk(answer,answerCheck)) {
-            return false;
+            return true;
         }
-        return true;
+        return false;
     }
 
     public String PasswordValidation(String password) {

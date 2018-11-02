@@ -46,7 +46,7 @@ public class PasswordUtilKamTest {
 
         boolean result = pwutil.HasValidationError("pqlamz", "pqlamz", "what is this?", "test", "test");
 
-        assertTrue(result);
+        assertFalse(result);
     }
 
     @Test
@@ -55,7 +55,7 @@ public class PasswordUtilKamTest {
 
         boolean result = pwutil.HasValidationError("", "pqlamz", "what is this?", "test", "test");
 
-        assertFalse(result);
+        assertTrue(result);
     }
 
     @Test
@@ -64,7 +64,7 @@ public class PasswordUtilKamTest {
 
         boolean result = pwutil.HasValidationError("pqlamz", "pqlamz", "", "test", "test");
 
-        assertFalse(result);
+        assertTrue(result);
     }
 
     @Test
@@ -73,7 +73,7 @@ public class PasswordUtilKamTest {
 
         boolean result = pwutil.HasValidationError("pqlamz", "pqlamz", "what is this?", "", "test");
 
-        assertFalse(result);
+        assertTrue(result);
     }
 
     @Test
@@ -82,7 +82,7 @@ public class PasswordUtilKamTest {
 
         boolean result = pwutil.HasValidationError("pqlamz", "pqlamz", "what is this?", "test", "testWrong");
 
-        assertFalse(result);
+        assertTrue(result);
     }
 
     @Test
@@ -91,7 +91,7 @@ public class PasswordUtilKamTest {
 
         boolean result = pwutil.HasValidationError("pqlam", "pqlamz", "what is this?", "test", "test");
 
-        assertFalse(result);
+        assertTrue(result);
     }
 
     @Test
@@ -107,9 +107,14 @@ public class PasswordUtilKamTest {
     public void PasswordCheckValidation_False() {
         PasswordUtil pwutil = new PasswordUtil(mMockContext);
 
-        String result = pwutil.PasswordCheckValidation("pqla", "pqlamz");
+        String result1 = pwutil.PasswordCheckValidation("pqla", "pqlamz");
+        assertEquals(result1, "Wrong or missing password");
 
-        assertEquals(result, "Wrong or missing password");
+        String result2 = pwutil.PasswordCheckValidation(null, "pqlamz");
+        assertEquals(result2, "Wrong or missing password");
+
+        String result3 = pwutil.PasswordCheckValidation("", "pqlamz");
+        assertEquals(result3, "Wrong or missing password");
     }
 
     @Test
