@@ -323,7 +323,7 @@ public class MainActivity extends BaseActivity implements OnDateSetListener, OnT
     }
 
 
-    Toolbar getToolbar() {
+    public Toolbar getToolbar() {
         return this.toolbar;
     }
 

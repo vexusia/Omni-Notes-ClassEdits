@@ -50,10 +50,10 @@ import java.util.List;
 @SuppressLint("Registered")
 public class BaseActivity extends ActionBarActivity {
 
-    protected final int TRANSITION_VERTICAL = 0;
-    protected final int TRANSITION_HORIZONTAL = 1;
+    public final int TRANSITION_VERTICAL = 0;
+    public final int TRANSITION_HORIZONTAL = 1;
 
-    protected SharedPreferences prefs;
+    public SharedPreferences prefs;
 
     protected String navigation;
     protected String navigationTmp; // used for widget navigation
@@ -173,7 +173,7 @@ public class BaseActivity extends ActionBarActivity {
 
 
     @SuppressLint("InlinedApi")
-    protected void animateTransition(FragmentTransaction transaction, int direction) {
+    public void animateTransition(FragmentTransaction transaction, int direction) {
         if (direction == TRANSITION_HORIZONTAL) {
             transaction.setCustomAnimations(R.anim.fade_in_support, R.anim.fade_out_support,
                     R.anim.fade_in_support, R.anim.fade_out_support);
