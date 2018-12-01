@@ -19,6 +19,8 @@ package it.feio.android.omninotes;
 
 import android.annotation.SuppressLint;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.DisplayMetrics;
 import android.view.ViewGroup;
 import android.widget.EditText;
@@ -28,6 +30,8 @@ import de.keyboardsurfer.android.widget.crouton.LifecycleCallback;
 import it.feio.android.omninotes.async.bus.PasswordRemovedEvent;
 import it.feio.android.omninotes.db.DbHelper;
 import it.feio.android.omninotes.models.ONStyle;
+import it.feio.android.omninotes.presenters.PasswordActivityPresenter;
+import it.feio.android.omninotes.presenters.PasswordActivityView;
 import it.feio.android.omninotes.utils.Constants;
 import it.feio.android.omninotes.utils.PasswordHelper;
 import it.feio.android.omninotes.utils.PasswordUtil;
@@ -37,7 +41,7 @@ import rx.android.schedulers.AndroidSchedulers;
 import rx.schedulers.Schedulers;
 
 
-public class PasswordActivity extends BaseActivity {
+public class PasswordActivity extends BaseActivity implements PasswordActivityView {
 
     private ViewGroup crouton_handle;
     public EditText passwordCheck;
@@ -47,7 +51,7 @@ public class PasswordActivity extends BaseActivity {
 	public EditText answerCheck;
     private PasswordActivity mActivity;
     private PasswordUtil pwUtil;
-
+	private PasswordActivityPresenter presenter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,7 +64,9 @@ public class PasswordActivity extends BaseActivity {
         getWindow().setLayout(screenWidth, screenHeight);
         mActivity = this;
         setActionBarTitle(getString(R.string.title_activity_password));
+		presenter = new PasswordActivityPresenter(this);
         initViews();
+        initModelBinding();
     }
 
 
@@ -85,27 +91,7 @@ public class PasswordActivity extends BaseActivity {
 		});
 
         findViewById(R.id.password_confirm).setOnClickListener(v -> {
-			final String passwordText = password.getText().toString();
-			final String passwordCheckText = passwordCheck.getText().toString();
-			final String questionText = question.getText().toString();
-			final String answerText = answer.getText().toString();
-			final String answerCheckText = answerCheck.getText().toString();
-            password.setError(pwUtil.PasswordValidation(passwordText));
-            passwordCheck.setError(pwUtil.PasswordCheckValidation(passwordText, passwordCheckText));
-            question.setError(pwUtil.QuestionOkValidation(questionText));
-            answer.setError(pwUtil.AnswerOkValidation(answerText));
-            answerCheck.setError(pwUtil.AnswerCheckOkValidation(answerText, answerCheckText));
-			if (!pwUtil.HasValidationError(passwordText,passwordCheckText, questionText, answerText, answerCheckText)) {
-				if (prefs.getString(Constants.PREF_PASSWORD, null) != null) {
-					PasswordHelper.requestPassword(mActivity, passwordConfirmed -> {
-						if (passwordConfirmed) {
-							updatePassword(passwordText, questionText, answerText);
-						}
-					});
-				} else {
-					updatePassword(passwordText, questionText, answerText);
-				}
-			}
+			this.PasswordSubmit();
 		});
 
         findViewById(R.id.password_forgotten).setOnClickListener(v -> {
@@ -116,7 +102,74 @@ public class PasswordActivity extends BaseActivity {
 			PasswordHelper.resetPassword(this);
 		});
     }
+	//Add listeners to assist our presenter in binding values to our model
+    private void initModelBinding() {
+		passwordCheck.addTextChangedListener(new TextWatcher() {
+			@Override
+			public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+			}
+			@Override
+			public void onTextChanged(CharSequence s, int start, int before, int count) {
+				presenter.updatePasswordCheck(s.toString());
+			}
+			@Override
+			public void afterTextChanged(Editable s) {
 
+			}
+		});
+		password.addTextChangedListener(new TextWatcher() {
+			@Override
+			public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+			}
+			@Override
+			public void onTextChanged(CharSequence s, int start, int before, int count) {
+				presenter.updatePassword(s.toString());
+			}
+			@Override
+			public void afterTextChanged(Editable s) {
+
+			}
+		});
+		question.addTextChangedListener(new TextWatcher() {
+			@Override
+			public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+			}
+			@Override
+			public void onTextChanged(CharSequence s, int start, int before, int count) {
+				presenter.updateQuestion(s.toString());
+			}
+			@Override
+			public void afterTextChanged(Editable s) {
+
+			}
+		});
+		answer.addTextChangedListener(new TextWatcher() {
+			@Override
+			public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+			}
+			@Override
+			public void onTextChanged(CharSequence s, int start, int before, int count) {
+				presenter.updateAnswer(s.toString());
+			}
+			@Override
+			public void afterTextChanged(Editable s) {
+
+			}
+		});
+		answerCheck.addTextChangedListener(new TextWatcher() {
+			@Override
+			public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+			}
+			@Override
+			public void onTextChanged(CharSequence s, int start, int before, int count) {
+				presenter.updateAnswerCheck(s.toString());
+			}
+			@Override
+			public void afterTextChanged(Editable s) {
+
+			}
+		});
+	}
     public void PasswordSubmit() {
 		final String passwordText = password.getText().toString();
 		final String passwordCheckText = passwordCheck.getText().toString();
@@ -184,38 +237,29 @@ public class PasswordActivity extends BaseActivity {
 		} else if (passwordText.length() == 0) {
 			Crouton.makeText(mActivity, R.string.empty_password, ONStyle.WARN, crouton_handle).show();
 		} else {
-			Observable
-					.from(DbHelper.getInstance().getNotesWithLock(true))
-					.subscribeOn(Schedulers.newThread())
-					.observeOn(AndroidSchedulers.mainThread())
-					.doOnSubscribe(() -> prefs.edit()
-							.putString(Constants.PREF_PASSWORD, Security.md5(passwordText))
-							.putString(Constants.PREF_PASSWORD_QUESTION, questionText)
-							.putString(Constants.PREF_PASSWORD_ANSWER, Security.md5(answerText))
-							.commit())
-					.doOnNext(note -> DbHelper.getInstance().updateNote(note, false))
-					.doOnCompleted(() -> {
-						Crouton crouton = Crouton.makeText(mActivity, R.string.password_successfully_changed, ONStyle
-										.CONFIRM, crouton_handle);
-						crouton.setLifecycleCallback(new LifecycleCallback() {
-							@Override
-							public void onDisplayed() {
-								// Does nothing!
-							}
-
-
-							@Override
-							public void onRemoved() {
-								onBackPressed();
-							}
-						});
-						crouton.show();
-					})
-					.subscribe();
+			presenter.update(prefs);
 		}
 	}
 
-    @Override
+	public void SaveCompleted() {
+		Crouton crouton = Crouton.makeText(mActivity, R.string.password_successfully_changed, ONStyle
+                        .CONFIRM, crouton_handle);
+		crouton.setLifecycleCallback(new LifecycleCallback() {
+            @Override
+            public void onDisplayed() {
+                // Does nothing!
+            }
+
+
+            @Override
+            public void onRemoved() {
+                onBackPressed();
+            }
+        });
+		crouton.show();
+	}
+
+	@Override
     public void onBackPressed() {
         setResult(RESULT_OK);
         finish();
