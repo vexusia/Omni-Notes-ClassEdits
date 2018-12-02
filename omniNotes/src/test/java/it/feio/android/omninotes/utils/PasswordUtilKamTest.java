@@ -176,4 +176,32 @@ public class PasswordUtilKamTest {
         String result2 = pwutil.AnswerCheckOkValidation("42", "43");
         assertEquals(result2, "Answer wrong or missing");
     }
+
+    @Test
+    public void PasswordValidation_Valid() {
+        //Arrange
+        PasswordUtil pwutil = new PasswordUtil(mMockContext);
+        //Act
+        String result = pwutil.PasswordValidation("pqlamz");
+        //Assert
+        assertNull(result);
+    }
+    @Test
+    public void PasswordValidation_Invalid_Null() {
+        //Arrange
+        PasswordUtil pwutil = new PasswordUtil(mMockContext);
+        //Act
+        String result = pwutil.PasswordValidation(null);
+        //Assert
+        assertEquals(result,"Wrong or missing password");
+    }
+    @Test
+    public void PasswordValidation_Invalid_Empty() {
+        //Arrange
+        PasswordUtil pwutil = new PasswordUtil(mMockContext);
+        //Act
+        String result = pwutil.PasswordValidation("");
+        //Assert
+        assertEquals(result,"Wrong or missing password");
+    }
 }

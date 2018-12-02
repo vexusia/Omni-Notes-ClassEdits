@@ -27,7 +27,6 @@ import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import com.android.dx.command.Main;
 import com.nhaarman.listviewanimations.itemmanipulation.DynamicListView;
 
 import org.hamcrest.Description;
