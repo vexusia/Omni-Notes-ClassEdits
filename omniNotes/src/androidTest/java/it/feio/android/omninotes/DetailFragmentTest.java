@@ -48,6 +48,7 @@ import static android.support.test.espresso.action.ViewActions.clearText;
 import static android.support.test.espresso.action.ViewActions.click;
 import static android.support.test.espresso.action.ViewActions.closeSoftKeyboard;
 import static android.support.test.espresso.action.ViewActions.longClick;
+import static android.support.test.espresso.action.ViewActions.pressBack;
 import static android.support.test.espresso.action.ViewActions.replaceText;
 import static android.support.test.espresso.action.ViewActions.scrollTo;
 import static android.support.test.espresso.action.ViewActions.swipeRight;
@@ -57,6 +58,7 @@ import static android.support.test.espresso.assertion.ViewAssertions.matches;
 import static android.support.test.espresso.matcher.ViewMatchers.hasErrorText;
 import static android.support.test.espresso.matcher.ViewMatchers.isChecked;
 import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
+import static android.support.test.espresso.matcher.ViewMatchers.isFocusable;
 import static android.support.test.espresso.matcher.ViewMatchers.withClassName;
 import static android.support.test.espresso.matcher.ViewMatchers.withContentDescription;
 import static android.support.test.espresso.matcher.ViewMatchers.withEffectiveVisibility;
@@ -67,6 +69,7 @@ import static it.feio.android.omninotes.BaseEspressoTest.childAtPosition;
 import static junit.framework.Assert.assertFalse;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.anything;
+import static org.hamcrest.Matchers.endsWith;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.startsWith;
 
@@ -193,12 +196,91 @@ public class DetailFragmentTest {
         //save note
         onView(withContentDescription("drawer open")).perform(click());
         ViewInteraction view = onView(withId(R.id.crouton_handle)).check(matches(withClassName(is("android.widget.FrameLayout"))));
-
         view.check(matches(isDisplayed()));
 
         //archive note
         onView(withText("Test Title2")).perform(swipeRight());
         onView(withText("Test Title2")).check(doesNotExist());
+    }
+
+    @Test
+    public void testEditLockedNote() {
+        //create note
+        onView(withId(R.id.fab_expand_menu_button)).perform(click());
+
+        //add new text note
+        onView(withId(R.id.fab_note)).perform(click());
+
+        //add title and content
+        onView(withId(R.id.detail_title)).perform(typeText("Locked Note"), closeSoftKeyboard());
+
+        //lock note
+        onView(withContentDescription("More options")).perform(click());
+        onView(withText("Lock")).perform(click());
+
+        //enter password
+        onView(allOf(withClassName(endsWith("EditText")))).perform(typeText("test"), closeSoftKeyboard());
+        ViewInteraction mDButton = onView(
+                allOf(withId(R.id.buttonDefaultPositive), isDisplayed()));
+        mDButton.perform(click());
+
+        //save note
+        onView(withContentDescription("drawer open")).perform(click());
+
+        ViewInteraction view = onView(withId(R.id.crouton_handle)).check(matches(withClassName(is("android.widget.FrameLayout"))));
+        view.check(matches(isDisplayed()));
+
+        //check note exists
+        onView(withText("Locked Note")).check(matches(isDisplayed()));
+
+        //edit note
+        onView(withText("Locked Note")).perform(click());
+
+        //enter invalid password
+        //password entry
+        onView(allOf(withClassName(endsWith("EditText")))).perform(typeText("blah"), closeSoftKeyboard());
+
+        //enter password
+        ViewInteraction button1 = onView(
+                allOf(withId(R.id.buttonDefaultPositive), isDisplayed()));
+        button1.perform(click());
+
+        //check error occurred
+        onView(allOf(withClassName(endsWith("EditText")))).check(matches(hasErrorText("Wrong password")));
+
+        //enter valid password
+        onView(allOf(withClassName(endsWith("EditText")))).perform(clearText(), typeText("test"), closeSoftKeyboard());
+
+        //enter password
+        ViewInteraction button2 = onView(
+                allOf(withId(R.id.buttonDefaultPositive), isDisplayed()));
+        button2.perform(click());
+
+        onView(withId(R.id.detail_title)).perform(clearText(), typeText("Locked Note Edit"));
+        onView(withId(R.id.detail_content)).perform(typeText("Edited content of locked note."));
+
+        //save note
+        onView(withContentDescription("drawer open")).perform(click());
+
+        onView(withText("Locked Note Edit")).check(matches(isDisplayed()));
+
+        //select note to archive
+        onView(withText("Locked Note Edit")).perform(swipeRight());
+
+        //password entry
+        onView(allOf(withClassName(endsWith("EditText")))).perform(typeText("test"), closeSoftKeyboard());
+
+        //enter password
+        ViewInteraction button3 = onView(
+                allOf(withId(R.id.buttonDefaultPositive), isDisplayed()));
+        button3.perform(click());
+
+        //check message appeared
+        ViewInteraction view2 = onView(withId(R.id.crouton_handle)).check(matches(withClassName(is("android.widget.FrameLayout"))));
+        view2.check(matches(isDisplayed()));
+
+        //check note is not accessible from main view
+        onView(withText("Locked Note Edit")).check(doesNotExist());
     }
 
 }
